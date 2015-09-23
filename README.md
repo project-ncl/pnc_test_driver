@@ -1,3 +1,3 @@
 # pnc_test_driver
 
-Python project to test pnc performance Openshift vs VM.
+Python project to test pnc performance of Openshift vs VM.
