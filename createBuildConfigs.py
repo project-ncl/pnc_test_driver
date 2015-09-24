@@ -22,6 +22,9 @@ def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.asc
 bc_ids = []
 with open('sampleBuildConfigs/dependantProjects.json') as f:
     for line in f:
+        line = json.loads(line)
+        line["name"] = randomName()
+        line = json.dumps(line)
         headers = {'content-type': 'application/json'}
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=headers)
         data = json.loads(r.content)
