@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import json
 import requests
+import random
+import string
 
 SERVER_NAME = "http://localhost:8080"
 
@@ -13,6 +15,9 @@ def fireBuilds(idList):
     for i in idList:
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build")
         print r.content
+
+def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
+   return ''.join(random.choice(chars) for i in range(size))
 
 bc_ids = []
 with open('sampleBuildConfigs/dependantProjects.json') as f:
