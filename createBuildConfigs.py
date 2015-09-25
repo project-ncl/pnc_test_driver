@@ -3,6 +3,7 @@ import json
 import requests
 import random
 import string
+from time import sleep
 
 SERVER_NAME = "http://localhost:8080"
 buildConfigIds = []
@@ -15,10 +16,26 @@ def getId(data):
 
 def fireBuilds(idList):
     for i in idList:
+        print("Firing build " + str(i))
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build")
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
+
+def waitTillBuildsAreDone():
+    print("Builds are running...")
+    while True:
+        if not buildsAreRunning():
+            break
+        sleep(1)
+    print("Builds are done!")
+
+def buildsAreRunning():
+    for i in recordIds:
+        r = requests.get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i))
+        if r.status_code == 200:
+            return True
+    return False
 
 def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
    return ''.join(random.choice(chars) for i in range(size))
@@ -35,3 +52,4 @@ with open('sampleBuildConfigs/dependantProjects.json') as f:
         buildConfigIds.append(buildId)
 
 fireBuilds(buildConfigIds)
+waitTillBuildsAreDone()
