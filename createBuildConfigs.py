@@ -5,6 +5,8 @@ import random
 import string
 
 SERVER_NAME = "http://localhost:8080"
+buildConfigIds = []
+recordIds = []
 
 def getId(data):
     contentKey = unicode("content", "utf-8")
@@ -14,12 +16,13 @@ def getId(data):
 def fireBuilds(idList):
     for i in idList:
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build")
-        print r.content
+        jsonContent = json.loads(r.content)
+        recordId = getId(jsonContent)
+        recordIds.append(recordId)
 
 def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
    return ''.join(random.choice(chars) for i in range(size))
 
-bc_ids = []
 with open('sampleBuildConfigs/dependantProjects.json') as f:
     for line in f:
         line = json.loads(line)
@@ -29,6 +32,6 @@ with open('sampleBuildConfigs/dependantProjects.json') as f:
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=headers)
         data = json.loads(r.content)
         buildId = getId(data)
-        bc_ids.append(buildId)
+        buildConfigIds.append(buildId)
 
-fireBuilds(bc_ids)
+fireBuilds(buildConfigIds)
