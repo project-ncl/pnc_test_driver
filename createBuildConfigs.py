@@ -40,9 +40,8 @@ def getHeaders():
     return {'content-type': 'application/json', "Authorization": "Bearer " + TOKEN}
 
 def getId(data):
-    contentKey = unicode("content", "utf-8")
     idKey = unicode("id", "utf-8")
-    return data[contentKey][idKey]
+    return data[idKey]
 
 def fireBuilds(idList):
     for i in idList:
@@ -77,11 +76,11 @@ def getTime(buildId):
     r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=HEADER)
     content = json.loads(r.content)
 
-    contentKey = unicode("content", "utf-8")
+    # contentKey = unicode("content", "utf-8")
     startTimeKey = unicode("startTime", "utf-8")
     endTimeKey = unicode("endTime", "utf-8")
 
-    time = int(content[contentKey][startTimeKey]) - int(content[contentKey][startTimeKey])
+    time = int(content[startTimeKey]) - int(content[startTimeKey])
     return time
 
 def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
@@ -90,18 +89,18 @@ def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.asc
 TOKEN = getToken(USERNAME, PASSWORD, REALM, CLIENT_ID, KEYCLOAK_URL)
 HEADER = getHeaders()
 
-with open('sampleBuildConfigs/dependantProjects.json') as f:
-    for line in f:
-        line = json.loads(line)
-        line["name"] = randomName()
-        line = json.dumps(line)
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=HEADER)
-        data = json.loads(r.content)
-        buildId = getId(data)
-        buildConfigIds.append(buildId)
-        print("Added build configuration " + str(buildId))
+# with open('sampleBuildConfigs/dependantProjects.json') as f:
+    # for line in f:
+        # line = json.loads(line)
+        # line["name"] = randomName()
+        # line = json.dumps(line)
+        # r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=HEADER)
+        # data = json.loads(r.content)
+        # buildId = getId(data)
+        # buildConfigIds.append(buildId)
+        # print("Added build configuration " + str(buildId))
 
-fireBuilds(buildConfigIds)
+fireBuilds([18, 19, 20, 21, 22])
 waitTillBuildsAreDone()
 getAllBuildTimes()
 print(buildTimes)
