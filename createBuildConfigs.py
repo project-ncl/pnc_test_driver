@@ -1,22 +1,21 @@
 #!/usr/bin/python
+
 import json
 import requests
 import random
 import string
+import ConfigParser
 from time import sleep
 
-SERVER_NAME = "http://ncl-test-vm-01.host.prod.eng.bos.redhat.com:8180"
-USERNAME = 'pnc-admin'
-PASSWORD = 'testme'
-REALM = 'pncredhat'
-CLIENT_ID = 'pncdirect'
-KEYCLOAK_URL = 'https://keycloak3-pncauth.rhcloud.com'
-TOKEN = ""
-JSON_HEADER = ""
-HEADER = ""
+CONFIG_FILE = "config.ini"
 buildConfigIds = []
 recordIds = []
 buildTimes = []
+
+def load(value):
+    parser = ConfigParser.ConfigParser()
+    parser.read(CONFIG_FILE)
+    return parser.get("CREDENTIALS", value)
 
 # Note: when using it for actual requests, add to header: 'Authorization: Bearer <token>'
 def getToken(username, password, realm, client_id, keycloak_url):
@@ -37,70 +36,84 @@ def getToken(username, password, realm, client_id, keycloak_url):
 
 def getHeaders():
 
-    return {'content-type': 'application/json', "Authorization": "Bearer " + TOKEN}
+    token = getToken(USERNAME, PASSWORD, REALM, CLIENT_ID, KEYCLOAK_URL)
+    return {'content-type': 'application/json', "Authorization": "Bearer " + token}
 
 def getId(data):
     idKey = unicode("id", "utf-8")
-    return data[idKey]
+    contentKey = unicode("content", "utf-8")
+
+    return data[contentKey][idKey]
 
 def fireBuilds(idList):
     for i in idList:
         print("Firing build " + str(i))
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers=HEADER)
-        print(r.text)
-        print(r.status_code)
+        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers=getHeaders())
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
+        sleep(2)
 
 def waitTillBuildsAreDone():
     print("Builds are running...")
     while True:
         if not buildsAreRunning():
             break
-        sleep(1)
+        sleep(5)
     print("Builds are done!")
 
 def buildsAreRunning():
     for i in recordIds:
-        r = requests.get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=HEADER)
+        r = requests.get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
         if r.status_code == 200:
             return True
     return False
 
 def getAllBuildTimes():
     for i in recordIds:
-        buildTimes.append(getTime(i))
+        time = int(i) / 1000 / 60
+        buildTimes.append(int(getTime(i)))
 
 def getTime(buildId):
-    r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=HEADER)
+    r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=getHeaders())
     content = json.loads(r.content)
 
-    # contentKey = unicode("content", "utf-8")
+    contentKey = unicode("content", "utf-8")
     startTimeKey = unicode("startTime", "utf-8")
     endTimeKey = unicode("endTime", "utf-8")
 
-    time = int(content[startTimeKey]) - int(content[startTimeKey])
-    return time
+    return  int(content[contentKey][endTimeKey]) - int(content[contentKey][startTimeKey])
 
 def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
     return ''.join(random.choice(chars) for i in range(size))
 
-TOKEN = getToken(USERNAME, PASSWORD, REALM, CLIENT_ID, KEYCLOAK_URL)
-HEADER = getHeaders()
+def printStats():
+    print("The build times are:", buildTimes)
+    print("Total build times:", sum(buildTimes))
+    print("Max build time:", max(buildTimes))
+    print("Min build time:", min(buildTimes))
+    print("Average build time:", sum(buildTimes)/len(buildTimes))
 
-# with open('sampleBuildConfigs/dependantProjects.json') as f:
-    # for line in f:
-        # line = json.loads(line)
-        # line["name"] = randomName()
-        # line = json.dumps(line)
-        # r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=HEADER)
-        # data = json.loads(r.content)
-        # buildId = getId(data)
-        # buildConfigIds.append(buildId)
-        # print("Added build configuration " + str(buildId))
+SERVER_NAME = load("SERVER_NAME")
+USERNAME = load("USERNAME")
+PASSWORD = load("PASSWORD")
+REALM = load("REALM")
+CLIENT_ID = load("CLIENT_ID")
+KEYCLOAK_URL = load("KEYCLOAK_URL")
 
-fireBuilds([18, 19, 20, 21, 22])
+with open('sampleBuildConfigs/dependantProjects.json') as f:
+    for line in f:
+        line = json.loads(line)
+        line["name"] = randomName()
+        line = json.dumps(line)
+        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=getHeaders())
+        data = json.loads(r.content)
+        buildId = getId(data)
+        buildConfigIds.append(buildId)
+        print("Added build configuration " + str(buildId))
+
+
+fireBuilds(buildConfigIds)
 waitTillBuildsAreDone()
 getAllBuildTimes()
-print(buildTimes)
+printStats()
