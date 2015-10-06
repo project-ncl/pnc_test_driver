@@ -94,26 +94,29 @@ def printStats():
     print("Min build time:", min(buildTimes))
     print("Average build time:", sum(buildTimes)/len(buildTimes))
 
-SERVER_NAME = load("SERVER_NAME")
-USERNAME = load("USERNAME")
-PASSWORD = load("PASSWORD")
-REALM = load("REALM")
-CLIENT_ID = load("CLIENT_ID")
-KEYCLOAK_URL = load("KEYCLOAK_URL")
+def loadBuildConfigs():
+    with open('sampleBuildConfigs/dependantProjects.json') as f:
+        for line in f:
+            line = json.loads(line)
+            line["name"] = randomName()
+            line = json.dumps(line)
+            r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=getHeaders())
+            print(r.content)
+            data = json.loads(r.content)
+            buildId = getId(data)
+            buildConfigIds.append(buildId)
+            print("Added build configuration " + str(buildId))
 
-with open('sampleBuildConfigs/dependantProjects.json') as f:
-    for line in f:
-        line = json.loads(line)
-        line["name"] = randomName()
-        line = json.dumps(line)
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=getHeaders())
-        data = json.loads(r.content)
-        buildId = getId(data)
-        buildConfigIds.append(buildId)
-        print("Added build configuration " + str(buildId))
+if __name__ == "__main__":
+    SERVER_NAME = load("SERVER_NAME")
+    USERNAME = load("USERNAME")
+    PASSWORD = load("PASSWORD")
+    REALM = load("REALM")
+    CLIENT_ID = load("CLIENT_ID")
+    KEYCLOAK_URL = load("KEYCLOAK_URL")
 
-
-fireBuilds(buildConfigIds)
-waitTillBuildsAreDone()
-getAllBuildTimes()
-printStats()
+    loadBuildConfigs()
+    fireBuilds(buildConfigIds)
+    waitTillBuildsAreDone()
+    getAllBuildTimes()
+    printStats()
