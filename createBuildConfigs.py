@@ -25,7 +25,8 @@ def getToken(username, password, realm, client_id, keycloak_url):
               'username': username,
               'password': password}
 
-    r = requests.post(keycloak_url + "/auth/realms/" + realm + "/tokens/grants/access",params)
+    r = requests.post(keycloak_url + "/auth/realms/" + realm + "/tokens/grants/access",
+                      params, verify=False)
 
     if r.status_code == 200:
         reply = json.loads(r.content)
@@ -48,7 +49,8 @@ def getId(data):
 def fireBuilds(idList):
     for i in idList:
         print("Firing build " + str(i))
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers=getHeaders())
+        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build",
+                          headers=getHeaders(), verify=False)
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
@@ -100,7 +102,8 @@ def loadBuildConfigs():
             line = json.loads(line)
             line["name"] = randomName()
             line = json.dumps(line)
-            r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", data=line, headers=getHeaders())
+            r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
+                              data=line, headers=getHeaders(), verify=False)
             print(r.content)
             data = json.loads(r.content)
             buildId = getId(data)
