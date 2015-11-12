@@ -96,19 +96,28 @@ def printStats():
     print("Min build time:", min(buildTimes))
     print("Average build time:", sum(buildTimes)/len(buildTimes))
 
-def loadBuildConfigs():
+def sendBuildConfigsToServer(numberOfConfigs):
+    buildConfigList = getBuildConfigList()
+    for i in range(numberOfConfigs):
+        config = buildConfigList[i%len(buildConfigList)]
+        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
+                          data=config, headers=getHeaders(), verify=False)
+        data = json.loads(r.content)
+        buildId = getId(data)
+        buildConfigIds.append(buildId)
+        print("Added build configuration " + str(buildId))
+
+
+
+def getBuildConfigList():
+    configList = []
     with open('sampleBuildConfigs/dependantProjects.json') as f:
         for line in f:
-            line = json.loads(line)
-            line["name"] = randomName()
-            line = json.dumps(line)
-            r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
-                              data=line, headers=getHeaders(), verify=False)
-            print(r.content)
-            data = json.loads(r.content)
-            buildId = getId(data)
-            buildConfigIds.append(buildId)
-            print("Added build configuration " + str(buildId))
+            config = json.loads(line)
+            config["name"] = randomName()
+            config = json.dumps(config)
+            configList.append(config)
+    return configList
 
 if __name__ == "__main__":
     SERVER_NAME = load("SERVER_NAME")
@@ -118,7 +127,7 @@ if __name__ == "__main__":
     CLIENT_ID = load("CLIENT_ID")
     KEYCLOAK_URL = load("KEYCLOAK_URL")
 
-    loadBuildConfigs()
+    sendBuildConfigsToServer(2)
     fireBuilds(buildConfigIds)
     waitTillBuildsAreDone()
     getAllBuildTimes()
