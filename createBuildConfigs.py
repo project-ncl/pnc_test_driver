@@ -7,6 +7,8 @@ import string
 import ConfigParser
 from time import sleep
 
+requests.packages.urllib3.disable_warnings()
+
 CONFIG_FILE = "config.ini"
 buildConfigIds = []
 recordIds = []
@@ -50,7 +52,7 @@ def fireBuilds(idList):
     for i in idList:
         print("Firing build " + str(i))
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build",
-                          headers=getHeaders(), verify=False)
+                          headers=getHeaders())
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
@@ -103,7 +105,7 @@ def sendBuildConfigsToServer(numberOfConfigs):
         config["name"] = randomName()
         config = json.dumps(config)
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
-                          data=config, headers=getHeaders(), verify=False)
+                          data=config, headers=getHeaders())
         data = json.loads(r.content)
         buildId = getId(data)
         buildConfigIds.append(buildId)
