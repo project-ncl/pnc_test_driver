@@ -100,6 +100,8 @@ def sendBuildConfigsToServer(numberOfConfigs):
     buildConfigList = getBuildConfigList()
     for i in range(numberOfConfigs):
         config = buildConfigList[i%len(buildConfigList)]
+        config["name"] = randomName()
+        config = json.dumps(config)
         r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
                           data=config, headers=getHeaders(), verify=False)
         data = json.loads(r.content)
@@ -107,15 +109,11 @@ def sendBuildConfigsToServer(numberOfConfigs):
         buildConfigIds.append(buildId)
         print("Added build configuration " + str(buildId))
 
-
-
 def getBuildConfigList():
     configList = []
     with open('sampleBuildConfigs/dependantProjects.json') as f:
         for line in f:
             config = json.loads(line)
-            config["name"] = randomName()
-            config = json.dumps(config)
             configList.append(config)
     return configList
 
@@ -126,8 +124,9 @@ if __name__ == "__main__":
     REALM = load("REALM")
     CLIENT_ID = load("CLIENT_ID")
     KEYCLOAK_URL = load("KEYCLOAK_URL")
+    NUMBER_OF_BUILDS = int(load("NUMBER_OF_BUILDS"))
 
-    sendBuildConfigsToServer(2)
+    sendBuildConfigsToServer(NUMBER_OF_BUILDS)
     fireBuilds(buildConfigIds)
     waitTillBuildsAreDone()
     getAllBuildTimes()
