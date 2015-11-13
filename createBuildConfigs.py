@@ -68,8 +68,13 @@ def waitTillBuildsAreDone():
 
 def buildsAreRunning():
     for i in recordIds:
-        r = requests.get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
-        if r.status_code == 200:
+        try:
+            r = requests.get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
+            if r.status_code == 200:
+                return True
+        except requests.exceptions.ConnectionError:
+            print("Could not connect to server... Retrying in 60 seconds")
+            sleep(60)
             return True
     return False
 
