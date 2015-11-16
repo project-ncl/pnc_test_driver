@@ -13,6 +13,7 @@ CONFIG_FILE = "config.ini"
 buildConfigIds = []
 recordIds = []
 buildTimes = []
+statuses = []
 
 def load(value):
     parser = ConfigParser.ConfigParser()
@@ -92,15 +93,31 @@ def getTime(buildId):
 
     return  int(content[contentKey][endTimeKey]) - int(content[contentKey][startTimeKey])
 
+def getStatuses():
+    for i in recordIds:
+        statuses.append(getStatus(i))
+
+def getStatus(recordId):
+    r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(recordId), headers=getHeaders())
+    content = json.loads(r.content)
+
+    contentKey = unicode("content", "utf-8")
+    statusKey = unicode("status", "utf-8")
+
+    return content[contentKey][statusKey]
+
 def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
     return ''.join(random.choice(chars) for i in range(size))
 
 def printStats():
-    print "The build times are:", buildTimes
-    print "Total build times:", sum(buildTimes)
-    print "Max build time:", max(buildTimes)
-    print "Min build time:", min(buildTimes)
-    print "Average build time:", sum(buildTimes)/len(buildTimes)
+    print "#####STATS#####"
+    print "Number of successes:", len(filter(lambda x: x == "SUCCESS", statuses))
+    print "Number of failures:", len(filter(lambda x: x != "SUCCESS", statuses))
+    print "The build times are:", buildTimes, "seconds"
+    print "Total build times:", sum(buildTimes), "seconds"
+    print "Max build time:", max(buildTimes), "seconds"
+    print "Min build time:", min(buildTimes), "seconds"
+    print "Average build time:", sum(buildTimes)/len(buildTimes), "seconds"
 
 def sendBuildConfigsToServer(numberOfConfigs):
     buildConfigList = getBuildConfigList()
@@ -136,4 +153,5 @@ if __name__ == "__main__":
     fireBuilds(buildConfigIds)
     waitTillBuildsAreDone()
     getAllBuildTimes()
+    getStatuses()
     printStats()
