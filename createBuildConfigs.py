@@ -51,8 +51,7 @@ def getId(data):
 def fireBuilds(idList):
     for i in idList:
         print("Firing build " + str(i))
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build",
-                          headers=getHeaders())
+        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers=getHeaders())
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
@@ -97,11 +96,11 @@ def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.asc
     return ''.join(random.choice(chars) for i in range(size))
 
 def printStats():
-    print("The build times are:", buildTimes)
-    print("Total build times:", sum(buildTimes))
-    print("Max build time:", max(buildTimes))
-    print("Min build time:", min(buildTimes))
-    print("Average build time:", sum(buildTimes)/len(buildTimes))
+    print "The build times are:", buildTimes
+    print "Total build times:", sum(buildTimes)
+    print "Max build time:", max(buildTimes)
+    print "Min build time:", min(buildTimes)
+    print "Average build time:", sum(buildTimes)/len(buildTimes)
 
 def sendBuildConfigsToServer(numberOfConfigs):
     buildConfigList = getBuildConfigList()
