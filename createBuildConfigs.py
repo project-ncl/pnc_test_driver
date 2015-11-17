@@ -80,8 +80,8 @@ def buildsAreRunning():
 
 def getAllBuildTimes():
     for i in recordIds:
-        time = int(i) / 1000 / 60
-        buildTimes.append(int(getTime(i)))
+        time = int(getTime(i)) / 1000
+        buildTimes.append(time)
 
 def getTime(buildId):
     r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=getHeaders())
