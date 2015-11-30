@@ -119,18 +119,27 @@ def printStats():
     print "Min build time:", min(buildTimes), "seconds"
     print "Average build time:", sum(buildTimes)/len(buildTimes), "seconds"
 
-def sendBuildConfigsToServer(numberOfConfigs):
+def printRecordIds():
+    print('')
+    for recordId, status in zip(recordIds, statuses):
+        print(SERVER_NAME + "/pnc-web/#/record/" + str(recordId) + "/info :: " + status)
+
+    print('')
+
+def sendBuildConfigsToServer(numberOfConfigs, repeat):
     buildConfigList = getBuildConfigList()
-    for i in range(numberOfConfigs):
-        config = buildConfigList[i%len(buildConfigList)]
-        config["name"] = randomName()
-        config = json.dumps(config)
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
-                          data=config, headers=getHeaders())
-        data = json.loads(r.content)
-        buildId = getId(data)
-        buildConfigIds.append(buildId)
-        print("Added build configuration " + str(buildId))
+
+    for _ in range(repeat + 1):
+        for i in range(numberOfConfigs):
+            config = buildConfigList[i%len(buildConfigList)]
+            config["name"] = randomName()
+            config = json.dumps(config)
+            r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
+                              data=config, headers=getHeaders())
+            data = json.loads(r.content)
+            buildId = getId(data)
+            buildConfigIds.append(buildId)
+            print("Added build configuration " + str(buildId))
 
 def getBuildConfigList():
     configList = []
@@ -149,9 +158,15 @@ if __name__ == "__main__":
     KEYCLOAK_URL = load("KEYCLOAK_URL")
     NUMBER_OF_BUILDS = int(load("NUMBER_OF_BUILDS"))
 
-    sendBuildConfigsToServer(NUMBER_OF_BUILDS)
+    # if REPEAT_BUILDS = 0, do no repeat same build configurations
+    # if REPEAT_BUILDS > 0, repeat the same build configurations REPEAT_BUILDS
+    # times
+    REPEAT_BUILDS = int(load("REPEAT"))
+
+    sendBuildConfigsToServer(NUMBER_OF_BUILDS, REPEAT_BUILDS)
     fireBuilds(buildConfigIds)
     waitTillBuildsAreDone()
     getAllBuildTimes()
     getStatuses()
+    printRecordIds()
     printStats()
