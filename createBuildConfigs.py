@@ -28,7 +28,7 @@ def post(rest_point, params = {}, headers = {}):
 def request_with_retry(request_type, rest_point, params, headers):
     for i in range(RETRIES):
         try:
-            response = request_type(rest_point, params, headers=headers, verify=False)
+            response = request_type(rest_point, data=params, headers=headers, verify=False)
             json_content = json.loads(response.content)
             return response
         except Exception:
