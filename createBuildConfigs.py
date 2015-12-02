@@ -6,6 +6,8 @@ import requests
 import random
 import string
 import ConfigParser
+import sys
+import traceback
 from time import sleep
 
 requests.packages.urllib3.disable_warnings()
@@ -15,6 +17,31 @@ buildConfigIds = []
 recordIds = []
 buildTimes = []
 statuses = []
+RETRIES = 6
+
+def get(rest_point, params = {}, headers = {}):
+    return request_with_retry(requests.get, rest_point, params, headers)
+
+def post(rest_point, params = {}, headers = {}):
+    return request_with_retry(requests.post, rest_point, params, headers)
+
+def request_with_retry(request_type, rest_point, params, headers):
+    for i in range(RETRIES):
+        try:
+            response = request_type(rest_point, params, headers=headers, verify=False)
+            json_content = json.loads(response.content)
+            return response
+        except ValueError:
+            print "Did not get a proper json response from", rest_point
+            print "Response: [" +  response.content + "]"
+        except Exception:
+            traceback.print_exc(file=sys.stdout)
+        print "Retrying in 10 seconds..."
+        sleep(10)
+
+    print "Retries exceeded could not get valid response."
+    sys.exit(1)
+
 
 def load(value):
     parser = ConfigParser.ConfigParser()
@@ -23,21 +50,18 @@ def load(value):
 
 # Note: when using it for actual requests, add to header: 'Authorization: Bearer <token>'
 def getToken(username, password, realm, client_id, keycloak_url):
-
     params = {'grant_type': 'password',
               'client_id': client_id,
               'username': username,
               'password': password}
+    response =  post(keycloak_url + "/auth/realms/" + realm + "/tokens/grants/access", params)
 
-    r = requests.post(keycloak_url + "/auth/realms/" + realm + "/tokens/grants/access",
-                      params, verify=False)
+    if response.status_code == 200:
+        token = json.loads(response.content)['access_token']
+        return token
 
-    if r.status_code == 200:
-        reply = json.loads(r.content)
-        return reply['access_token']
-    else:
-        print("Could not get the token id");
-        return None
+    print "WARNING: Could not get keycloak token"
+    return None
 
 def getHeaders():
 
@@ -53,7 +77,7 @@ def getId(data):
 def fireBuilds(idList):
     for i in idList:
         print("Firing build " + str(i))
-        r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers=getHeaders())
+        r = post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers = getHeaders())
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
@@ -69,14 +93,9 @@ def waitTillBuildsAreDone():
 
 def buildsAreRunning():
     for i in recordIds:
-        try:
-            r = requests.get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
+            r = get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
             if r.status_code == 200:
                 return True
-        except requests.exceptions.ConnectionError:
-            print("Could not connect to server... Retrying in 60 seconds")
-            sleep(60)
-            return True
     return False
 
 def getAllBuildTimes():
@@ -85,7 +104,7 @@ def getAllBuildTimes():
         buildTimes.append(time)
 
 def getTime(buildId):
-    r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=getHeaders())
+    r = get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=getHeaders())
     content = json.loads(r.content)
 
     contentKey = unicode("content", "utf-8")
@@ -99,7 +118,7 @@ def getStatuses():
         statuses.append(getStatus(i))
 
 def getStatus(recordId):
-    r = requests.get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(recordId), headers=getHeaders())
+    r = get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(recordId), headers=getHeaders())
     content = json.loads(r.content)
 
     contentKey = unicode("content", "utf-8")
@@ -153,8 +172,7 @@ def sendBuildConfigsToServer(numberOfConfigs, repeat):
             config = buildConfigList[i%len(buildConfigList)]
             config["name"] = randomName()
             config = json.dumps(config)
-            r = requests.post(SERVER_NAME + "/pnc-rest/rest/build-configurations/",
-                              data=config, headers=getHeaders())
+            r = post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", config, headers=getHeaders())
             data = json.loads(r.content)
             buildId = getId(data)
             buildConfigIds.append(buildId)
