@@ -31,9 +31,6 @@ def request_with_retry(request_type, rest_point, params, headers):
             response = request_type(rest_point, params, headers=headers, verify=False)
             json_content = json.loads(response.content)
             return response
-        except ValueError:
-            print "Did not get a proper json response from", rest_point
-            print "Response: [" +  response.content + "]"
         except Exception:
             traceback.print_exc(file=sys.stdout)
         print "Retrying in 10 seconds..."
