@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import json
+import math
 import requests
 import random
 import string
@@ -109,6 +110,22 @@ def getStatus(recordId):
 def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
     return ''.join(random.choice(chars) for i in range(size))
 
+
+def calculate_standard_deviation(list_of_items):
+    n = len(list_of_items)
+    mean = float(sum(list_of_items)) / n
+
+    sum_val = 0
+    for item in list_of_items:
+        sum_val += math.pow(item - mean, 2)
+
+    std_dev = math.sqrt(float(sum_val) / (n - 1))
+    return std_dev
+
+def calculate_standard_error(list_of_items):
+    std_dev = calculate_standard_deviation(list_of_items)
+    return std_dev / math.sqrt(len(list_of_items))
+
 def printStats():
     print "#####STATS#####"
     print "Number of successes:", len(filter(lambda x: x == "SUCCESS", statuses))
@@ -118,6 +135,8 @@ def printStats():
     print "Max build time:", max(buildTimes), "seconds"
     print "Min build time:", min(buildTimes), "seconds"
     print "Average build time:", sum(buildTimes)/len(buildTimes), "seconds"
+    print "Standard error: ", calculate_standard_error(buildTimes)
+
 
 def printRecordIds():
     print('')
