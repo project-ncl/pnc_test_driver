@@ -179,16 +179,44 @@ def calculate_standard_error(list_of_items):
     std_dev = calculate_standard_deviation(list_of_items)
     return std_dev / math.sqrt(len(list_of_items))
 
+def num_successes():
+    return len(filter(lambda x: x == "SUCCESS", statuses))
+
+def num_failures():
+    return len(filter(lambda x: x != "SUCCESS", statuses))
+
+def average_build_times():
+    return sum(buildTimes)/len(buildTimes)
+
 def printStats():
     logger.info("#####STATS#####")
-    logger.info("Number of successes: %s", len(filter(lambda x: x == "SUCCESS", statuses)))
-    logger.info("Number of failures: %s", len(filter(lambda x: x != "SUCCESS", statuses)))
+    logger.info("Number of successes: %s", num_successes())
+    logger.info("Number of failures: %s", num_failures())
     logger.info("The build times are: %s seconds", buildTimes)
     logger.info("Total build times: %s seconds", sum(buildTimes))
     logger.info("Max build time: %s seconds", max(buildTimes))
     logger.info("Min build time: %s seconds", min(buildTimes))
-    logger.info("Average build time: %s seconds", sum(buildTimes)/len(buildTimes))
+    logger.info("Average build time: %s seconds", average_build_times())
     logger.info("Standard error: %s", calculate_standard_error(buildTimes))
+
+
+def save_results_to_json(filename):
+    server_name = load("SERVER_NAME")
+    num_builds = int(load("NUMBER_OF_BUILDS"))
+    repeat = int(load("REPEAT"))
+
+    result = {}
+
+    result['successes'] = num_successes()
+    result['failures'] = num_failures()
+    result['average'] = average_build_times()
+    result['standard_error'] = calculate_standard_error(buildTimes)
+    result['server_name'] = server_name
+    result['num_builds'] = num_builds
+    result['repeat'] = repeat
+
+    with open(filename, 'wb') as f:
+        json.dump(result, f)
 
 
 def printRecordIds():
@@ -242,3 +270,4 @@ if __name__ == "__main__":
     printRecordIds()
     printStartStopTimes()
     printStats()
+    save_results_to_json("driver_results.json")
