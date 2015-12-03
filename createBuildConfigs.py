@@ -14,7 +14,7 @@ from time import sleep
 requests.packages.urllib3.disable_warnings()
 
 # setup logging to print timestamps
-logging.basicConfig(format='[%(asctime)s] %(message)s')
+logging.basicConfig(format='[%(asctime)s %(levelname)s] %(message)s')
 
 CONFIG_FILE = "config.ini"
 buildConfigIds = []
