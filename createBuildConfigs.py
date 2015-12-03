@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import logging
 import json
 import math
 import requests
@@ -12,6 +13,12 @@ import traceback
 from time import sleep
 
 requests.packages.urllib3.disable_warnings()
+
+# setup logging to print timestamps
+logging.basicConfig(format='[%(asctime)s %(levelname)s] %(message)s')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 DEFAULT_CONFIG_FILE = "config.ini"
 DEFAULT_CONFIG_LIST_JSON = 'sampleBuildConfigs/dependantProjects.json'
@@ -44,10 +51,10 @@ def request_with_retry(request_type, rest_point, params, headers):
             return response
         except Exception:
             traceback.print_exc(file=sys.stdout)
-        print "Retrying in 10 seconds..."
+        logger.warn("Retrying in 10 seconds...")
         sleep(10)
 
-    print "Retries exceeded could not get valid response."
+    logger.error("Retries exceeded! Could not get valid response.")
     sys.exit(1)
 
 
@@ -68,7 +75,7 @@ def getToken(username, password, realm, client_id, keycloak_url):
         token = json.loads(response.content)['access_token']
         return token
 
-    print "WARNING: Could not get keycloak token"
+    logger.error("Could not get keycloak token")
     return None
 
 def getHeaders():
@@ -84,20 +91,21 @@ def getId(data):
 
 def fireBuilds(idList):
     for i in idList:
-        print("Firing build " + str(i))
+        logger.info("Firing build %s", i)
         r = post(SERVER_NAME + "/pnc-rest/rest/build-configurations/" + str(i) + "/build", headers = getHeaders())
+        logger.info("Fired build %s", i)
         jsonContent = json.loads(r.content)
         recordId = getId(jsonContent)
         recordIds.append(recordId)
         sleep(2)
 
 def waitTillBuildsAreDone():
-    print("Builds are running...")
+    logger.info("Builds are running...")
     while True:
         if not buildsAreRunning():
             break
         sleep(5)
-    print("Builds are done!")
+    logger.info("Builds are done!")
 
 def buildsAreRunning():
     for i in recordIds:
@@ -154,21 +162,21 @@ def calculate_standard_error(list_of_items):
     return std_dev / math.sqrt(len(list_of_items))
 
 def printStats():
-    print "#####STATS#####"
-    print "Number of successes:", len(filter(lambda x: x == "SUCCESS", statuses))
-    print "Number of failures:", len(filter(lambda x: x != "SUCCESS", statuses))
-    print "The build times are:", buildTimes, "seconds"
-    print "Total build times:", sum(buildTimes), "seconds"
-    print "Max build time:", max(buildTimes), "seconds"
-    print "Min build time:", min(buildTimes), "seconds"
-    print "Average build time:", sum(buildTimes)/len(buildTimes), "seconds"
-    print "Standard error: ", calculate_standard_error(buildTimes)
+    logger.info("#####STATS#####")
+    logger.info("Number of successes: %s", len(filter(lambda x: x == "SUCCESS", statuses)))
+    logger.info("Number of failures: %s", len(filter(lambda x: x != "SUCCESS", statuses)))
+    logger.info("The build times are: %s seconds", buildTimes)
+    logger.info("Total build times: %s seconds", sum(buildTimes))
+    logger.info("Max build time: %s seconds", max(buildTimes))
+    logger.info("Min build time: %s seconds", min(buildTimes))
+    logger.info("Average build time: %s seconds", sum(buildTimes)/len(buildTimes))
+    logger.info("Standard error: %s", calculate_standard_error(buildTimes))
 
 
 def printRecordIds():
     print('')
     for recordId, status in zip(recordIds, statuses):
-        print(SERVER_NAME + "/pnc-web/#/record/" + str(recordId) + "/info :: " + status)
+        logger.info(SERVER_NAME + "/pnc-web/#/record/" + str(recordId) + "/info :: " + status)
 
     print('')
 
@@ -184,7 +192,7 @@ def sendBuildConfigsToServer(numberOfConfigs, repeat):
             data = json.loads(r.content)
             buildId = getId(data)
             buildConfigIds.append(buildId)
-            print("Added build configuration " + str(buildId))
+            logger.info("Added build configuration %s", buildId)
 
 def getBuildConfigList():
     configList = []
