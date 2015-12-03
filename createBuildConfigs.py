@@ -9,6 +9,7 @@ import string
 import ConfigParser
 import sys
 import traceback
+import datetime
 from time import sleep
 
 requests.packages.urllib3.disable_warnings()
@@ -108,6 +109,29 @@ def getAllBuildTimes():
         time = int(getTime(i)) / 1000
         buildTimes.append(time)
 
+def printStartStopTimes():
+    print('')
+    for buildId in recordIds:
+        r = get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=getHeaders())
+        content = json.loads(r.content)
+
+        contentKey = unicode("content", "utf-8")
+        startTimeKey = unicode("startTime", "utf-8")
+        endTimeKey = unicode("endTime", "utf-8")
+
+        startTime = int(content[contentKey][startTimeKey])
+        endTime = int(content[contentKey][endTimeKey])
+        duration = (endTime - startTime)/1000
+
+        startTimeStr = datetime.datetime.fromtimestamp(startTime/1000).strftime('%H:%M:%S')
+        endTimeStr = datetime.datetime.fromtimestamp(endTime/1000).strftime('%H:%M:%S')
+
+        logger.info("Build Record: %s :: Start Time: %s :: End Time: %s :: Duration: %s seconds",
+                    buildId, startTimeStr, endTimeStr, duration)
+
+    print('')
+
+
 def getTime(buildId):
     r = get(SERVER_NAME + "/pnc-rest/rest/build-records/" + str(buildId), headers=getHeaders())
     content = json.loads(r.content)
@@ -137,6 +161,11 @@ def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.asc
 
 def calculate_standard_deviation(list_of_items):
     n = len(list_of_items)
+
+    # if only 1 item
+    if n == 1:
+        return 0
+
     mean = float(sum(list_of_items)) / n
 
     sum_val = 0
@@ -211,4 +240,5 @@ if __name__ == "__main__":
     getAllBuildTimes()
     getStatuses()
     printRecordIds()
+    printStartStopTimes()
     printStats()
