@@ -17,7 +17,7 @@ def report_to_graphite(data):
     server_name = data['server_name']
 
     # for graphite to work, it needs to send a key, value and timestamp
-    key = "jenkins.pnc_test_driver." + "buildNum" + str(num_builds) + \
+    key = "jenkins.pnc_test_driver." + server_name + ".buildNum" + str(num_builds) + \
           "repeat" + str(repeat) + "."
 
     timestamp = int(time.time())
