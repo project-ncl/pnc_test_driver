@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import logging
 import json
 import math
@@ -20,7 +21,17 @@ logging.basicConfig(format='[%(asctime)s %(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-CONFIG_FILE = "config.ini"
+DEFAULT_CONFIG_FILE = "config.ini"
+DEFAULT_CONFIG_LIST_JSON = 'sampleBuildConfigs/dependantProjects.json'
+
+configFile = DEFAULT_CONFIG_FILE
+if len(sys.argv) > 1:
+    configFile = sys.argv[1]
+
+configListJson = DEFAULT_CONFIG_LIST_JSON
+if len(sys.argv) > 2:
+    configListJson = sys.argv[1]
+
 buildConfigIds = []
 recordIds = []
 buildTimes = []
@@ -50,7 +61,7 @@ def request_with_retry(request_type, rest_point, params, headers):
 
 def load(value):
     parser = ConfigParser.ConfigParser()
-    parser.read(CONFIG_FILE)
+    parser.read(configFile)
     return parser.get("CREDENTIALS", value)
 
 # Note: when using it for actual requests, add to header: 'Authorization: Bearer <token>'
@@ -242,10 +253,8 @@ def sendBuildConfigsToServer(numberOfConfigs, repeat):
 
 def getBuildConfigList():
     configList = []
-    with open('sampleBuildConfigs/dependantProjects.json') as f:
-        for line in f:
-            config = json.loads(line)
-            configList.append(config)
+    with open(configListJson) as f:
+        configList = json.loads(f.read())
     return configList
 
 if __name__ == "__main__":
