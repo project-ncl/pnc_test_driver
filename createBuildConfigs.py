@@ -51,6 +51,7 @@ def request_with_retry(request_type, rest_point, params, headers):
             json_content = json.loads(response.content)
             return response
         except Exception:
+            logger.error("An error occured while making a remote request to: {} [request_type={}]".format(rest_point, request_type))
             traceback.print_exc(file=sys.stdout)
         logger.warn("Retrying in 10 seconds...")
         sleep(10)
@@ -150,6 +151,18 @@ def getTime(buildId):
     contentKey = unicode("content", "utf-8")
     startTimeKey = unicode("startTime", "utf-8")
     endTimeKey = unicode("endTime", "utf-8")
+
+    '''
+    ******** -> TEMPORARY HACKFIX! <- *******
+    If the build dies with a SYSTEM_ERROR the builds endTime will be None and int - None == BOOM!!
+    To get the test driver working again I'm returning 0 buildlength for builds that end with a
+    status of SYSTEM_ERROR. This will skew the stats if not addressed, this needs to be removed
+    once the ideal solution has been decided upon.
+    '''
+    statusKey = unicode("status", "utf-8")
+    if content[contentKey][statusKey] == "SYSTEM_ERROR":
+        return 0
+    # Non hackfix code resumes below.
 
     return  int(content[contentKey][endTimeKey]) - int(content[contentKey][startTimeKey])
 
