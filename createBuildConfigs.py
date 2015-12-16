@@ -11,6 +11,7 @@ import ConfigParser
 import sys
 import traceback
 import datetime
+import uuid
 from time import sleep
 
 requests.packages.urllib3.disable_warnings()
@@ -179,9 +180,8 @@ def getStatus(recordId):
 
     return content[contentKey][statusKey]
 
-def randomName(size=6, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
-    return ''.join(random.choice(chars) for i in range(size))
-
+def randomName():
+    return str(uuid.uuid4())
 
 def calculate_standard_deviation(list_of_items):
     n = len(list_of_items)
