@@ -51,8 +51,8 @@ def request_with_retry(request_type, rest_point, params, headers):
             response = request_type(rest_point, data=params, headers=headers, verify=False)
             json_content = json.loads(response.content)
             return response
-        except Exception:
-            logger.error("An error occured while making a remote request to: {} [request_type={}]".format(rest_point, request_type))
+        except Exception as e:
+            logger.error("An error occured while making a remote request to: {} [request_type={}], error: {}.".format(rest_point, request_type, e.strerror))
             traceback.print_exc(file=sys.stdout)
         logger.warn("Retrying in 10 seconds...")
         sleep(10)
@@ -103,17 +103,18 @@ def fireBuilds(idList):
         sleep(2)
 
 def waitTillBuildsAreDone():
-    logger.info("Builds are running...")
+    logger.info("All builds are running...")
     while True:
         if not buildsAreRunning():
             break
         sleep(5)
-    logger.info("Builds are done!")
+    logger.info("All builds are done!")
 
 def buildsAreRunning():
     for i in recordIds:
             r = get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
             if r.status_code == 200:
+                logger.debug("Build [" + str(i) + "] is still running.")
                 return True
     return False
 
