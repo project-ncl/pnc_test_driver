@@ -114,7 +114,7 @@ def buildsAreRunning():
     for i in recordIds:
             r = get(SERVER_NAME + "/pnc-rest/rest/running-build-records/" + str(i), headers=getHeaders())
             if r.status_code == 200:
-                logger.debug("Build [" + str(i) + "] is still running.")
+                logger.info("Build [" + str(i) + "] is still running.")
                 return True
     return False
 
