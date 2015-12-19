@@ -285,6 +285,11 @@ if __name__ == "__main__":
     # times
     REPEAT_BUILDS = int(load("REPEAT"))
 
+    logger.info("#####CONFIG#####")
+    logger.info("SERVER_NAME: %s", SERVER_NAME)
+    logger.info("NUMBER_OF_BUILDS: %s", NUMBER_OF_BUILDS)
+    logger.info("REPEAT_BUILDS: %s", REPEAT_BUILDS)
+
     sendBuildConfigsToServer(NUMBER_OF_BUILDS, REPEAT_BUILDS)
     fireBuilds(buildConfigIds)
     waitTillBuildsAreDone()
