@@ -51,8 +51,8 @@ def request_with_retry(request_type, rest_point, params, headers):
             response = request_type(rest_point, data=params, headers=headers, verify=False)
             json_content = json.loads(response.content)
             return response
-        except Exception as e:
-            logger.error("An error occured while making a remote request to: {} [request_type={}], error: {}.".format(rest_point, request_type, e.strerror))
+        except Exception:
+            logger.error("An error occured while making a remote request to: {} [request_type={}]".format(rest_point, request_type))
             traceback.print_exc(file=sys.stdout)
         logger.warn("Retrying in 10 seconds...")
         sleep(10)
