@@ -5,9 +5,8 @@
 	"scmRepoURL": "https://github.com/jboss-modules/jboss-modules.git",
 	"scmRevision": "1.0",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1},
-	"dependencyIds": []
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "dependency-analysis",
 	"description": "string",
@@ -15,8 +14,8 @@
 	"scmRepoURL": "https://github.com/project-ncl/dependency-analysis",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1},
+	"projectId": 1,
+	"environmentId": 1,
 	"dependencyIds": []
 }, {
 	"name": "smoke-tests",
@@ -25,8 +24,8 @@
 	"scmRepoURL": "https://github.com/emmettu/smokes",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1},
+	"projectId": 1,
+	"environmentId": 1,
 	"dependencyIds": []
 }, {
 	"name": "pnc3",
@@ -35,8 +34,8 @@
 	"scmRepoURL": "https://github.com/project-ncl/pnc.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "pnc-local",
 	"description": "string",
@@ -44,8 +43,8 @@
 	"scmRepoURL": "https://github.com/mavaghela/pnc-local",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "Keycloak",
 	"description": "string",
@@ -53,8 +52,8 @@
 	"scmRepoURL": "https://github.com/keycloak/keycloak.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "Guava",
 	"description": "string",
@@ -62,8 +61,8 @@
 	"scmRepoURL": "https://github.com/google/guava.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "Modeshape",
 	"description": "string",
@@ -71,8 +70,8 @@
 	"scmRepoURL": "https://github.com/ModeShape/modeshape.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "pnc-build-agent",
 	"description": "string",
@@ -80,8 +79,8 @@
 	"scmRepoURL": "https://github.com/project-ncl/pnc-build-agent.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "jbpm",
 	"description": "string",
@@ -89,8 +88,8 @@
 	"scmRepoURL": "https://github.com/droolsjbpm/jbpm.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "jackson-core",
 	"description": "string",
@@ -98,8 +97,8 @@
 	"scmRepoURL": "https://github.com/FasterXML/jackson-core.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "jackson-parent",
 	"description": "string",
@@ -107,8 +106,8 @@
 	"scmRepoURL": "https://github.com/FasterXML/jackson-parent.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }, {
 	"name": "maven-plugin-test",
 	"description": "string",
@@ -116,6 +115,6 @@
 	"scmRepoURL": "https://github.com/rnc/mvn-plugin-test.git",
 	"scmRevision": "master",
 	"repositories": "string",
-	"project": {"id": 1},
-	"environment": {"id": 1}
+	"projectId": 1,
+	"environmentId": 1
 }]
