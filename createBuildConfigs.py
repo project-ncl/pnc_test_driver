@@ -205,10 +205,10 @@ def calculate_standard_error(list_of_items):
     return std_dev / math.sqrt(len(list_of_items))
 
 def num_successes():
-    return len(filter(lambda x: x == "SUCCESS", statuses))
+    return len(filter(lambda x: x == "DONE", statuses))
 
 def num_failures():
-    return len(filter(lambda x: x != "SUCCESS", statuses))
+    return len(filter(lambda x: x != "DONE", statuses))
 
 def average_build_times():
     return sum(buildTimes)/len(buildTimes)
