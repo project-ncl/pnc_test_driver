@@ -3,7 +3,7 @@
 	"description": "string",
 	"buildScript": "mvn -X clean deploy -DskipTests=true -Dsalt=23",
 	"scmRepoURL": "https://github.com/jboss-modules/jboss-modules.git",
-	"scmRevision": "1.0",
+	"scmRevision": "1.5.1.Final",
 	"repositories": "string",
 	"project": {"id": 1},
 	"environment": {"id": 1},
