@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import ConfigParser
 import datetime
 import json
@@ -26,12 +27,7 @@ DEFAULT_CONFIG_FILE = "config.ini"
 DEFAULT_CONFIG_LIST_JSON = 'sampleBuildConfigs/dependantProjects.json'
 
 configFile = DEFAULT_CONFIG_FILE
-if len(sys.argv) > 1:
-    configFile = sys.argv[1]
-
 configListJson = DEFAULT_CONFIG_LIST_JSON
-if len(sys.argv) > 2:
-    configListJson = sys.argv[1]
 
 buildConfigIds = []
 recordIds = []
@@ -272,6 +268,18 @@ def getBuildConfigList():
     return configList
 
 if __name__ == "__main__":
+
+    argparser = argparse.ArgumentParser(description='Create project newcastle build configurations, run them, and create a summary of the results.')
+    argparser.add_argument('config_file', nargs='?', default=DEFAULT_CONFIG_FILE,
+                           help='ini file containing remote server info and execution config')
+    argparser.add_argument('config_list_json', nargs='?', default=DEFAULT_CONFIG_LIST_JSON,
+                           help='json list of build configurations to create')
+
+    args = argparser.parse_args()
+
+    configFile = args.config_file
+    configListJson = args.config_list_json
+
     SERVER_NAME = load("SERVER_NAME")
     USERNAME = load("USERNAME")
     PASSWORD = load("PASSWORD")
