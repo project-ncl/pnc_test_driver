@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
-import sys
-import logging
+import ConfigParser
+import datetime
 import json
+import logging
 import math
 import requests
 import random
 import string
-import ConfigParser
 import sys
 import traceback
-import datetime
 import uuid
+
 from time import sleep
 
 requests.packages.urllib3.disable_warnings()
