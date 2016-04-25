@@ -280,7 +280,7 @@ if __name__ == "__main__":
     configFile = args.config_file
     configListJson = args.config_list_json
 
-    SERVER_NAME = load("SERVER_NAME")
+    SERVER_NAME = load("SERVER_NAME").rstrip('/')
     USERNAME = load("USERNAME")
     PASSWORD = load("PASSWORD")
     REALM = load("REALM")
