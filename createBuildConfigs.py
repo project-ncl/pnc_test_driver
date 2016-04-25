@@ -253,7 +253,7 @@ def sendBuildConfigsToServer(numberOfConfigs, repeat):
     for _ in range(repeat + 1):
         for i in range(numberOfConfigs):
             config = buildConfigList[i%len(buildConfigList)]
-            config["name"] = randomName()
+            config["name"] = "test_" + config["name"] + '_' + randomName()
             config = json.dumps(config)
             r = post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", config, headers=getHeaders())
             data = json.loads(r.content)
