@@ -1,2 +1,6 @@
 .idea/
 *.ini
+.project
+.pydevproject
+driver_results.json
+*.pyc

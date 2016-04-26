@@ -1,17 +1,18 @@
 #!/usr/bin/python
 
-import sys
-import logging
+import argparse
+import ConfigParser
+import datetime
 import json
+import logging
 import math
 import requests
 import random
 import string
-import ConfigParser
 import sys
 import traceback
-import datetime
 import uuid
+
 from time import sleep
 
 requests.packages.urllib3.disable_warnings()
@@ -26,12 +27,7 @@ DEFAULT_CONFIG_FILE = "config.ini"
 DEFAULT_CONFIG_LIST_JSON = 'sampleBuildConfigs/dependantProjects.json'
 
 configFile = DEFAULT_CONFIG_FILE
-if len(sys.argv) > 1:
-    configFile = sys.argv[1]
-
 configListJson = DEFAULT_CONFIG_LIST_JSON
-if len(sys.argv) > 2:
-    configListJson = sys.argv[1]
 
 buildConfigIds = []
 recordIds = []
@@ -257,7 +253,7 @@ def sendBuildConfigsToServer(numberOfConfigs, repeat):
     for _ in range(repeat + 1):
         for i in range(numberOfConfigs):
             config = buildConfigList[i%len(buildConfigList)]
-            config["name"] = randomName()
+            config["name"] = "test_" + config["name"] + '_' + randomName()
             config = json.dumps(config)
             r = post(SERVER_NAME + "/pnc-rest/rest/build-configurations/", config, headers=getHeaders())
             data = json.loads(r.content)
@@ -272,7 +268,19 @@ def getBuildConfigList():
     return configList
 
 if __name__ == "__main__":
-    SERVER_NAME = load("SERVER_NAME")
+
+    argparser = argparse.ArgumentParser(description='Create project newcastle build configurations, run them, and create a summary of the results.')
+    argparser.add_argument('config_file', nargs='?', default=DEFAULT_CONFIG_FILE,
+                           help='ini file containing remote server info and execution config')
+    argparser.add_argument('config_list_json', nargs='?', default=DEFAULT_CONFIG_LIST_JSON,
+                           help='json list of build configurations to create')
+
+    args = argparser.parse_args()
+
+    configFile = args.config_file
+    configListJson = args.config_list_json
+
+    SERVER_NAME = load("SERVER_NAME").rstrip('/')
     USERNAME = load("USERNAME")
     PASSWORD = load("PASSWORD")
     REALM = load("REALM")
