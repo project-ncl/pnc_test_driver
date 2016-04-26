@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 DEFAULT_CONFIG_FILE = "config.ini"
-DEFAULT_CONFIG_LIST_JSON = 'sampleBuildConfigs/dependantProjects.json'
+DEFAULT_RESULTS_LIST_JSON = 'driver_results.json'
 
 configFile = DEFAULT_CONFIG_FILE
-configListJson = DEFAULT_CONFIG_LIST_JSON
+resultsFile = DEFAULT_RESULTS_LIST_JSON
 
 CONTENT_KEY = unicode("content", "utf-8")
 SCM_REPO_URL_KEY = unicode("scmRepoURL", "utf-8")
@@ -81,7 +81,11 @@ def getRecord(recordId):
 
 def checkoutGitSources(repoUrl, revision):
     repoDir = os.path.join(tempfile.gettempdir(), revision)
-    gitRepo = Repo.clone_from(repoUrl, repoDir)
+    if (os.path.isdir(repoDir)):
+        logger.warn("Found existing git checkout directory: " + str(repoDir))
+        gitRepo = Repo(repoDir)
+    else:
+        gitRepo = Repo.clone_from(repoUrl, repoDir)
     gitRepo.head.reference = gitRepo.commit(revision)
     gitRepo.head.reset(index=True, working_tree=True)
     return gitRepo
@@ -119,15 +123,25 @@ def hasValidScmRepoUrlAndRevision(buildRecord):
         return False
     return True
 
+def loadResultsFile(filename):
+    with open(filename) as f:
+        results = json.loads(f.read())
+        return results
+    return None
+
+
 if __name__ == "__main__":
 
     argparser = argparse.ArgumentParser(description='Check out sources from a git repo and verify contents.')
-    argparser.add_argument('config_file', nargs='?', default=DEFAULT_CONFIG_FILE,
+    argparser.add_argument('results_file', default=DEFAULT_RESULTS_LIST_JSON,
+                           help='ini file containing remote server info and execution config')
+    argparser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE,
                            help='ini file containing remote server info and execution config')
 
     args = argparser.parse_args()
 
-    configFile = args.config_file
+    configFile = args.config
+    resultsFile = args.results_file
 
     SERVER_NAME = load("SERVER_NAME").rstrip('/')
     USERNAME = load("USERNAME")
@@ -137,7 +151,8 @@ if __name__ == "__main__":
     KEYCLOAK_URL = load("KEYCLOAK_URL")
     NUMBER_OF_BUILDS = int(load("NUMBER_OF_BUILDS"))
 
-    ## TODO: need to load the set of build record IDs from a file
-    recordIds = [105]
+    results = loadResultsFile(resultsFile)
+    recordIds = results["record_ids"]
+    logger.info("Checking record ids: " + str(recordIds))
     checkBuilds(recordIds)
 
