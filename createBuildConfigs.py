@@ -235,6 +235,7 @@ def save_results_to_json(filename):
     result['server_name'] = server_name
     result['num_builds'] = num_builds
     result['repeat'] = repeat
+    result['record_ids'] = recordIds
 
     with open(filename, 'wb') as f:
         json.dump(result, f)
