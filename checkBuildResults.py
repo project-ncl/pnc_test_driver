@@ -4,10 +4,14 @@ import ConfigParser
 import json
 import logging
 import os
+import re
 import requests
+import sys
 import tempfile
+import traceback
 
 from git import Repo
+from time import sleep
 
 requests.packages.urllib3.disable_warnings()
 
@@ -90,13 +94,21 @@ def checkoutGitSources(repoUrl, revision):
     gitRepo.head.reset(index=True, working_tree=True)
     return gitRepo
 
-def getSourceChanges(repo):
+def getSourceChangesInLastCommit(repo):
     """ Get the changes made in the most recent commit"""
     return repo.git.diff('HEAD~1')
 
 def examinePom(diff):
-    """Check the POM file in the given directory for a modified POM version"""
-    logger.debug("Found diff starting with: " + diff.split('\n', 1)[0])
+    """Check the POM file in the given directory for automated modifications"""
+    checkPomForRedhatVersionUpdate(diff)
+
+POM_VERSION_UPDATE_REGEX_STR = r'^-\s*<version>([-\.\w]+)</version>\s*\+\s*<version>\1-redhat-1</version>'
+POM_VERSION_UPDATE_REGEX = re.compile(POM_VERSION_UPDATE_REGEX_STR, re.MULTILINE)
+
+def checkPomForRedhatVersionUpdate(diff):
+    """Check the POM file diff for the redhat version update"""
+    search = POM_VERSION_UPDATE_REGEX.search(diff)
+    assert(search is not None)
 
 def checkBuilds(recordIds):
     """Given a list of build record Ids, check the for a correct build result"""
@@ -111,7 +123,7 @@ def checkBuilds(recordIds):
 
         gitRepo = checkoutGitSources(recordContent[CONTENT_KEY][SCM_REPO_URL_KEY], recordContent[CONTENT_KEY][SCM_REVISION_KEY])
         logger.info("Checked out sources to: " + gitRepo.working_dir)
-        diff = getSourceChanges(gitRepo)
+        diff = getSourceChangesInLastCommit(gitRepo)
         examinePom(diff)
 
 def hasValidScmRepoUrlAndRevision(buildRecord):
@@ -150,6 +162,10 @@ if __name__ == "__main__":
     CLIENT_ID = load("CLIENT_ID")
     KEYCLOAK_URL = load("KEYCLOAK_URL")
     NUMBER_OF_BUILDS = int(load("NUMBER_OF_BUILDS"))
+
+    if not REALM:
+        logger.error("No auth realm found, check config file: " + str(configFile))
+        sys.exit()
 
     results = loadResultsFile(resultsFile)
     recordIds = results["record_ids"]
