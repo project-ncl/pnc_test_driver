@@ -4,10 +4,14 @@ import ConfigParser
 import json
 import logging
 import os
+import re
 import requests
+import sys
 import tempfile
+import traceback
 
 from git import Repo
+from time import sleep
 
 requests.packages.urllib3.disable_warnings()
 
@@ -18,10 +22,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 DEFAULT_CONFIG_FILE = "config.ini"
-DEFAULT_CONFIG_LIST_JSON = 'sampleBuildConfigs/dependantProjects.json'
+DEFAULT_RESULTS_LIST_JSON = 'driver_results.json'
 
 configFile = DEFAULT_CONFIG_FILE
-configListJson = DEFAULT_CONFIG_LIST_JSON
+resultsFile = DEFAULT_RESULTS_LIST_JSON
 
 CONTENT_KEY = unicode("content", "utf-8")
 SCM_REPO_URL_KEY = unicode("scmRepoURL", "utf-8")
@@ -81,18 +85,30 @@ def getRecord(recordId):
 
 def checkoutGitSources(repoUrl, revision):
     repoDir = os.path.join(tempfile.gettempdir(), revision)
-    gitRepo = Repo.clone_from(repoUrl, repoDir)
+    if (os.path.isdir(repoDir)):
+        logger.warn("Found existing git checkout directory: " + str(repoDir))
+        gitRepo = Repo(repoDir)
+    else:
+        gitRepo = Repo.clone_from(repoUrl, repoDir)
     gitRepo.head.reference = gitRepo.commit(revision)
     gitRepo.head.reset(index=True, working_tree=True)
     return gitRepo
 
-def getSourceChanges(repo):
+def getSourceChangesInLastCommit(repo):
     """ Get the changes made in the most recent commit"""
     return repo.git.diff('HEAD~1')
 
 def examinePom(diff):
-    """Check the POM file in the given directory for a modified POM version"""
-    logger.debug("Found diff starting with: " + diff.split('\n', 1)[0])
+    """Check the POM file in the given directory for automated modifications"""
+    checkPomForRedhatVersionUpdate(diff)
+
+POM_VERSION_UPDATE_REGEX_STR = r'^-\s*<version>([-\.\w]+)</version>\s*\+\s*<version>\1-redhat-1</version>'
+POM_VERSION_UPDATE_REGEX = re.compile(POM_VERSION_UPDATE_REGEX_STR, re.MULTILINE)
+
+def checkPomForRedhatVersionUpdate(diff):
+    """Check the POM file diff for the redhat version update"""
+    search = POM_VERSION_UPDATE_REGEX.search(diff)
+    assert(search is not None)
 
 def checkBuilds(recordIds):
     """Given a list of build record Ids, check the for a correct build result"""
@@ -107,7 +123,7 @@ def checkBuilds(recordIds):
 
         gitRepo = checkoutGitSources(recordContent[CONTENT_KEY][SCM_REPO_URL_KEY], recordContent[CONTENT_KEY][SCM_REVISION_KEY])
         logger.info("Checked out sources to: " + gitRepo.working_dir)
-        diff = getSourceChanges(gitRepo)
+        diff = getSourceChangesInLastCommit(gitRepo)
         examinePom(diff)
 
 def hasValidScmRepoUrlAndRevision(buildRecord):
@@ -119,15 +135,25 @@ def hasValidScmRepoUrlAndRevision(buildRecord):
         return False
     return True
 
+def loadResultsFile(filename):
+    with open(filename) as f:
+        results = json.loads(f.read())
+        return results
+    return None
+
+
 if __name__ == "__main__":
 
     argparser = argparse.ArgumentParser(description='Check out sources from a git repo and verify contents.')
-    argparser.add_argument('config_file', nargs='?', default=DEFAULT_CONFIG_FILE,
+    argparser.add_argument('results_file', default=DEFAULT_RESULTS_LIST_JSON,
+                           help='ini file containing remote server info and execution config')
+    argparser.add_argument('-c', '--config', default=DEFAULT_CONFIG_FILE,
                            help='ini file containing remote server info and execution config')
 
     args = argparser.parse_args()
 
-    configFile = args.config_file
+    configFile = args.config
+    resultsFile = args.results_file
 
     SERVER_NAME = load("SERVER_NAME").rstrip('/')
     USERNAME = load("USERNAME")
@@ -137,7 +163,12 @@ if __name__ == "__main__":
     KEYCLOAK_URL = load("KEYCLOAK_URL")
     NUMBER_OF_BUILDS = int(load("NUMBER_OF_BUILDS"))
 
-    ## TODO: need to load the set of build record IDs from a file
-    recordIds = [105]
+    if not REALM:
+        logger.error("No auth realm found, check config file: " + str(configFile))
+        sys.exit()
+
+    results = loadResultsFile(resultsFile)
+    recordIds = results["record_ids"]
+    logger.info("Checking record ids: " + str(recordIds))
     checkBuilds(recordIds)
 
